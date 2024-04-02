@@ -10,7 +10,10 @@ const StackLayout = () => {
         name="signup"
         options={{ presentation: "modal", headerShown: false }}
       />
-      <Stack.Screen name="home" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{headerShown:false}} />
+      <Stack.Screen name ="register-shop" options={{headerShown:false}} />
+      <Stack.Screen name="shopKeeperHome" options={{headerShown:false}} />
+      <Stack.Screen name="ManageOrder" options={{headerShown:false}} />
     </Stack>
   );
 };

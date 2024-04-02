@@ -1,6 +1,8 @@
+import "core-js/stable/atob";
 import { Link, useRouter } from "expo-router";
-import React, { useLayoutEffect } from "react";
+import React, { useEffect, useLayoutEffect } from "react";
 import {
+  Alert,
   Image,
   SafeAreaView,
   Text,
@@ -8,39 +10,75 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import useAuthStore from "@/stores/authStore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { jwtDecode, JwtPayload } from "jwt-decode";
 
+interface CustomJwtPayload extends JwtPayload {
+  UserName: string;
+  role: string; // Adjust the type according to your needs
+}
 export default function LoginScreen() {
   const router = useRouter();
 
-  const [emailAddress, setEmailAddress] = React.useState("");
+  const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const login = useAuthStore((state) => state.login);
+  const setToken = useAuthStore((state) => state.setToken);
+  const user = useAuthStore();
+  // useLayoutEffect(() => {
+  //   setUsername("");
+  //   setPassword("");
+  // }, []);
 
-  useLayoutEffect(() => {
-    setEmailAddress("");
-    setPassword("");
+  useEffect(() => {
+    const getTokenandRedirect = async () => {
+      const token = await AsyncStorage.getItem("authToken");
+      console.log("Token from login page: ", token);
+      if (token) {
+        console.log("Inside if ");
+        try {
+          const decodedToken = jwtDecode(token) as JwtPayload;
+          console.log("decodedToken : ", decodedToken);
+          setToken(token);
+          if (
+            decodedToken &&
+            "role" in decodedToken &&
+            decodedToken.role === "Customer"
+          ) {
+            router.push("/(tabs)/home");
+          }
+          if (
+            decodedToken &&
+            "role" in decodedToken &&
+            decodedToken.role === "Shopkeeper"
+          ) {
+            router.replace("/shopKeeperHome");
+          }
+        } catch (error) {
+          console.log("err: ", error);
+        }
+      }
+    };
+    getTokenandRedirect();
   }, []);
 
   const onSignInPress = async () => {
-    if (emailAddress === "test" && password === "test") {
-      router.push("/home");
+    // if (username === "test" && password === "test") {
+    //   router.replace("/(tabs)/home");
+    // } // dummy auth
+    try {
+      login(username, password, () => {
+        if (user.user.role === "Customer") {
+          router.replace("/home");
+        } else {
+          router.replace("/shopKeeperHome");
+        }
+      });
+    } catch (error) {
+      console.log("err: ", error);
     }
-
-    // const response = fetch("", {
-    //   method: "POST",
-    //   body: JSON.stringify({
-    //     emailAddress: emailAddress,
-    //     password: password,
-    //   }),
-    //   headers: {
-    //     "Content-Type": "application/json"
-    //   },
-    // });
-
-    //if response.statusCode === 200 {
-    // router.push("/home")
-    // else display error.
-    }
-  
+  };
 
   const onSignUpHerePress = () => {};
   return (
@@ -62,10 +100,10 @@ export default function LoginScreen() {
       <View className="p-2">
         <TextInput
           autoCapitalize="none"
-          value={emailAddress}
-          placeholder="Email..."
+          value={username}
+          placeholder="Username..."
           className="bg-gray-200 w-60 p-2 text-center rounded-lg h-12"
-          onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
+          onChangeText={(emailAddress) => setUsername(emailAddress)}
         />
       </View>
 

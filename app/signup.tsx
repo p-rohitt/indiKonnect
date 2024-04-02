@@ -7,18 +7,56 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import RadioGroup, {RadioButtonProps} from 'react-native-radio-buttons-group';
 import { SelectList } from "react-native-dropdown-select-list";
+import useAuthStore from "@/stores/authStore";
+import { useRouter } from "expo-router";
 export default function SignUpScreen() {
+  const router = useRouter();
+  const [username,setUsername] = React.useState("");
   const [emailAddress, setEmailAddress] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [role, setRole] = React.useState("");
-  const roles = [
-    { key: "1", value: "Customer" },
-    { key: "2", value: "Shopkeeper" },
-  ];
-  // start the sign up process.
-  const onSignUpPress = async () => {};
+  const [roleID, setRoleID] = React.useState("1");
+  // const roles = [
+  //   { key: "1", value: "Customer" },
+  //   { key: "2", value: "Shopkeeper" },
+  // ];
 
+  const radioButtons: RadioButtonProps[] = React.useMemo(() => ([
+    {
+        id: '1', // acts as primary key, should be unique and non-empty string
+        label: 'Customer',
+        value: 'Customer'
+    },
+    {
+        id: '2',
+        label: 'Shopkeeper',
+        value: 'Shopkeeper'
+    }
+]), []);
+  const signup = useAuthStore((state) => state.signup);
+  // start the sign up process.
+  const onSignUpPress = async () => {
+    const user = {
+      username, emailAddress, password, role
+    }
+
+    console.log(user);
+
+    signup(username,emailAddress,password,role, ()=> {
+      if(role=== "Customer"){
+        router.replace("/home")
+      }
+      else{
+        router.replace('/register-shop');
+      }
+    })
+  };
+
+  React.useEffect(()=>{
+      roleID ==="1" ? setRole("Customer") : setRole("Shopkeeper");
+  },[roleID])
   return (
     <SafeAreaView className="flex-1 justify-center items-center">
       <View className="mb-10">
@@ -34,6 +72,15 @@ export default function SignUpScreen() {
       </View>
 
       <View className="flex space-y-2">
+        <View>
+          <TextInput
+            autoCapitalize="none"
+            value={username}
+            placeholder="Username"
+            onChangeText={(email) => setUsername(email)}
+            className="bg-gray-200 w-60 p-2 text-center rounded-lg h-12"
+          />
+        </View>
         <View>
           <TextInput
             autoCapitalize="none"
@@ -53,8 +100,8 @@ export default function SignUpScreen() {
             className="bg-gray-200 w-60 p-2 text-center rounded-lg h-12"
           />
         </View>
-        <View className="mt-1 text-center">
-          <SelectList
+        <View className="mt-2 flex flex-row mb-2">
+          {/* <SelectList
             data={roles}
             save="value"
             setSelected={(role: React.SetStateAction<string>) => setRole(role)}
@@ -68,7 +115,15 @@ export default function SignUpScreen() {
               justifyContent: "center",
             }}
             inputStyles={{ textAlign: "center", textAlignVertical: "center" }}
-          />
+          /> */}
+
+            <RadioGroup 
+            radioButtons={radioButtons} 
+            onPress={setRoleID}
+            selectedId={roleID}
+            layout="row"
+            
+        />
         </View>
 
         <TouchableOpacity
