@@ -73,13 +73,12 @@ const shopKeeperHome = () => {
     );
   };
 
-  function handleLogout(){
+  
     const handleLogout = async () => {
-
       await AsyncStorage.removeItem("authToken");
       router.replace("/")
-      
-    }
+
+    
   }
 
   return (

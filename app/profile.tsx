@@ -4,6 +4,7 @@ import useAuthStore from '@/stores/authStore'
 const profile = () => {
 
   const {user} = useAuthStore();
+  console.log(user)
 
   return (
     <SafeAreaView className="flex justify-center items-center h-screen">

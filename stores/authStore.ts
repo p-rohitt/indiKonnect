@@ -15,7 +15,7 @@ user:{
 } | null;
 token: string | null;
 setToken: (token: string | null) => void;
-login: (username:string,password:string, onSuccess:()=> void) => void;
+login: (username:string,password:string,onSuccess:()=>void) => void;
 logout: () => void;
 signup:(username:string, email:string, password:string, role:string,onSuccess:()=> void) => void
 }
@@ -24,7 +24,7 @@ signup:(username:string, email:string, password:string, role:string,onSuccess:()
 const useAuthStore = create<AuthState> ((set) => ({
     isAuthenticated:false,
     user:null,
-    login:async (UserName:string,Password:string,onSuccess:()=> void) => {
+    login:async (UserName:string,Password:string,onSuccess:()=>void) => {
         try{
             console.log("sending post req")
             const response = await axios.post("http://localhost:8000/sign-in", {UserName,Password});
@@ -35,14 +35,15 @@ const useAuthStore = create<AuthState> ((set) => ({
                 console.log("user: ",response.data.user.UserName,response.data.user.Email,response.data.user.Role)
                 console.log("token:",response.data.token);
             }
-            else{
-
+            else{     
                 console.log("Invalid Username or Password ");
+                return;
             }
 
             await AsyncStorage.setItem("authToken", response.data.token);
+            onSuccess();
             
-        onSuccess();
+        
         } catch(error){
             console.log("Login failed: ",error);
             Alert.alert("Login failed","Invalid username or password!")
@@ -58,14 +59,6 @@ const useAuthStore = create<AuthState> ((set) => ({
     signup:async (UserName:string, Email:string,Password:string, Role:string,onSuccess:() => void) => {
         try{
             const response = await axios.post('http://localhost:8000/create-user',{UserName,Email,Password,Role});
-            // const response = {
-            //         status:200,
-            //         data:{
-            //             username:"talksikk",
-            //             email:"rohit.pansari9@gmail.com",
-            //             role:"Shopkeeper"
-            //         }
-            // }
 
             console.log(response)
             if(response.status !== 201){

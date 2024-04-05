@@ -45,7 +45,7 @@ const ManageOrder = () => {
     });
 
     if(response.status !==200){
-                
+
     }
   }
 

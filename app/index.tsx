@@ -25,7 +25,7 @@ export default function LoginScreen() {
   const [password, setPassword] = React.useState("");
   const login = useAuthStore((state) => state.login);
   const setToken = useAuthStore((state) => state.setToken);
-  const user = useAuthStore();
+  const {user} = useAuthStore();
   // useLayoutEffect(() => {
   //   setUsername("");
   //   setPassword("");
@@ -36,21 +36,18 @@ export default function LoginScreen() {
       const token = await AsyncStorage.getItem("authToken");
       console.log("Token from login page: ", token);
       if (token) {
-        console.log("Inside if ");
         try {
-          const decodedToken = jwtDecode(token) as JwtPayload;
+          const decodedToken = await jwtDecode(token) as CustomJwtPayload;
           console.log("decodedToken : ", decodedToken);
           setToken(token);
           if (
             decodedToken &&
-            "role" in decodedToken &&
             decodedToken.role === "Customer"
           ) {
-            router.push("/(tabs)/home");
+            router.push("/home");
           }
           if (
             decodedToken &&
-            "role" in decodedToken &&
             decodedToken.role === "Shopkeeper"
           ) {
             router.replace("/shopKeeperHome");
@@ -68,13 +65,18 @@ export default function LoginScreen() {
     //   router.replace("/(tabs)/home");
     // } // dummy auth
     try {
-      login(username, password, () => {
-        if (user.user.role === "Customer") {
-          router.replace("/home");
-        } else {
-          router.replace("/shopKeeperHome");
+      await login(username, password,()=>{
+        console.log(user);
+        if(user.role === "Customer"){
+          console.log("Redirecting to Home")
+          router.replace("/home")
+        }
+        if(user.role === "Shopkeeper"){
+          console.log("Redirecting to Shopkeeper")
+          router.replace("/shopKeeperHome")
         }
       });
+      
     } catch (error) {
       console.log("err: ", error);
     }
