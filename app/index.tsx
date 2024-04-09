@@ -1,6 +1,6 @@
 import "core-js/stable/atob";
 import { Link, useRouter } from "expo-router";
-import React, { useEffect, useLayoutEffect } from "react";
+import React, { useEffect, useLayoutEffect, } from "react";
 import {
   Alert,
   Image,
@@ -9,6 +9,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  KeyboardAvoidingView
 } from "react-native";
 import useAuthStore from "@/stores/authStore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -25,12 +26,7 @@ export default function LoginScreen() {
   const [password, setPassword] = React.useState("");
   const login = useAuthStore((state) => state.login);
   const setToken = useAuthStore((state) => state.setToken);
-  const {user} = useAuthStore();
-  // useLayoutEffect(() => {
-  //   setUsername("");
-  //   setPassword("");
-  // }, []);
-
+  const user = useAuthStore((state)=>state.user);
   useEffect(() => {
     const getTokenandRedirect = async () => {
       const token = await AsyncStorage.getItem("authToken");
@@ -57,32 +53,31 @@ export default function LoginScreen() {
         }
       }
     };
-    getTokenandRedirect();
+    //  getTokenandRedirect();
   }, []);
 
   const onSignInPress = async () => {
     // if (username === "test" && password === "test") {
     //   router.replace("/(tabs)/home");
     // } // dummy auth
-    try {
-      await login(username, password,()=>{
-        console.log(user);
-        if(user.role === "Customer"){
-          console.log("Redirecting to Home")
-          router.replace("/home")
-        }
-        if(user.role === "Shopkeeper"){
-          console.log("Redirecting to Shopkeeper")
-          router.replace("/shopKeeperHome")
-        }
-      });
+  try{
+      setToken(null)
+     await login(username, password,(roleFromBackend)=> {
+      if(roleFromBackend === "Customer"){
+        router.replace("/home");
+      }
       
-    } catch (error) {
-      console.log("err: ", error);
-    }
+      if(roleFromBackend === "Shopkeeper"){
+        router.replace("/shopKeeperHome");
+      }
+     });
+    
+    // console.log("le user bc: ",user)
+  }catch(err){
+    console.log("error logging in: ",err);
+  }
   };
 
-  const onSignUpHerePress = () => {};
   return (
     <SafeAreaView className="flex-1 justify-center items-center">
       <View className="mb-10">
@@ -99,17 +94,18 @@ export default function LoginScreen() {
           We connect the real India.
         </Text>
       </View>
-      <View className="p-2">
+      <KeyboardAvoidingView className="p-2">
         <TextInput
           autoCapitalize="none"
           value={username}
           placeholder="Username..."
           className="bg-gray-200 w-60 p-2 text-center rounded-lg h-12"
           onChangeText={(emailAddress) => setUsername(emailAddress)}
+          keyboardType="default"
         />
-      </View>
+      </KeyboardAvoidingView>
 
-      <View>
+      <KeyboardAvoidingView>
         <TextInput
           value={password}
           placeholder="Password..."
@@ -117,7 +113,7 @@ export default function LoginScreen() {
           className="bg-gray-200 w-60 p-2 text-center rounded-lg h-12"
           onChangeText={(password) => setPassword(password)}
         />
-      </View>
+      </KeyboardAvoidingView>
 
       <TouchableOpacity
         onPress={onSignInPress}

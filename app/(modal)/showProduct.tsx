@@ -1,7 +1,6 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, Pressable, Alert } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { getDishById } from "@/assets/data/restaurant";
 import Colors from "@/constants/Colors";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
@@ -24,12 +23,6 @@ const Dish = () => {
 
   const { items } = useShopStore();
 
-  const [temp, setTemp] = useState({
-    _id: "",
-    itemName: "",
-    variants: [],
-  });
-
   const [item, setItem] = useState<Product>(null);
   const [selectedVariantId, setSelectedVariantId] = useState(0);
   const [count,setCount] = useState(1);
@@ -41,7 +34,6 @@ const Dish = () => {
 
     const searchedItem = searchByID(items, id);
     setItem(searchedItem);
-    // setSelectedVariantId(searchedItem.variants[0])
   }, []);
   const addToCart = () => {
     if(count <=0){
@@ -57,7 +49,6 @@ const Dish = () => {
       variantId:item.variants[selectedVariantId]._id,
       variantWeight:item.variants[selectedVariantId].netWeight,
       variantUnit:item.variants[selectedVariantId].unit
-
     }
 
     console.log(temp)
@@ -114,7 +105,7 @@ const Dish = () => {
               return (
                 <Picker.Item 
                   key={variant.price}
-                  label={`${variant.netWeight} ${variant.unit} (₹${variant.price})`}
+                  label={`${variant.netWeight} ${variant.unit} ($${variant.price})`}
                   value={index}  
                 />
               );
@@ -157,7 +148,7 @@ const Dish = () => {
         <View style={styles.footer}>
           <TouchableOpacity style={styles.fullButton} onPress={addToCart}>
             <Text style={styles.footerText}>
-              {count === 0 ? `Add to cart `:`Add for ₹${item?.variants[selectedVariantId].price * count}`}
+              {count === 0 ? `Add to cart `:`Add for $${item?.variants[selectedVariantId].price * count}`}
               
             </Text>
           </TouchableOpacity>

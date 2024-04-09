@@ -4,7 +4,7 @@ import {create} from "zustand"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 
 interface Shop{
-    __id:string
+    _id:string
     shopName: string;
     ownerName:string
     address: string;

@@ -44,45 +44,56 @@ const RegisterShop = () => {
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
-      base64:true
+      base64: true,
     });
 
     if (!result.canceled) {
-      setImage(result.assets[0].base64);
+      console.log(result.assets[0]);
+      setImage(result.assets[0]);
     }
   };
 
   const handleRegisterShop = async () => {
+   const updatedImage = image.uri.replace("file://","");
+    console.log("updated", updatedImage)
     const formData = new FormData();
     formData.append("shopName", shopName);
     formData.append("address", address);
     formData.append("latitude", location.coords.latitude);
     formData.append("longitude", location.coords.longitude);
-    formData.append("image", image);
+    formData.append("path",updatedImage);
+    formData.append("originalname",image.fileName)
+  
 
     // Convert FormData to JSON
-    const jsonObject = JSON.stringify(formData);
-
     try {
-      console.log("Sending post req")
-      console.log(token)
-      const response = await axios.post(
-        "http://localhost:8000/create-shop",
-        {
-          shopName,address,latitude:location.coords.latitude,longitude:location.coords.longitude,image 
-        },
-        {
-          headers: {
-            "Authorization": `JWT ${token}`,
-          },
+      console.log("Sending post req");
+      console.log(token);
+      const response = await fetch(
+        "http://localhost:8000/create-shop", {
+          method:"POST",
+          body:formData,
+          headers:{
+            authorization: `JWT ${token}`
+          }
         }
+
+        // {
+        //   shopName,
+        //   address,
+        //   latitude: location.coords.latitude,
+        //   longitude: location.coords.longitude,
+        //   file:updatedImage,
+        // },
       );
 
+      console.log(response)
+
       if (response.status === 201) {
-        Alert.alert("Congratulations", response.data.message);
+        Alert.alert("Congratulations");
         router.replace("/shopKeeperHome");
       } else {
-        Alert.alert("Warning", response.data.message);
+        Alert.alert("Warning");
       }
     } catch (error) {
       console.log("Error registering shop: ", error);
@@ -109,7 +120,7 @@ const RegisterShop = () => {
             height={300}
             className="rounded-full"
             source={{
-              uri: image,
+              uri: image.uri,
             }}
           />
         )}

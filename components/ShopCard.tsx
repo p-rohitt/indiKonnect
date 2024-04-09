@@ -16,7 +16,7 @@ interface Props{
     itemList:Product[]
 }
 interface Shop {
-  __id:string
+  _id:string
   shopName: string;
   ownerName:string
   address: string;

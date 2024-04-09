@@ -3,9 +3,6 @@ import { Alert } from "react-native";
 import {create} from "zustand"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 
-
-
-
 interface AuthState{
 isAuthenticated:boolean,
 user:{
@@ -15,33 +12,43 @@ user:{
 } | null;
 token: string | null;
 setToken: (token: string | null) => void;
-login: (username:string,password:string,onSuccess:()=>void) => void;
-logout: () => void;
-signup:(username:string, email:string, password:string, role:string,onSuccess:()=> void) => void
+login: (username:string,password:string,onSuccess:(role:string)=>void) => Promise<void>;
+logout: () => Promise<void>;
+signup:(username:string, email:string, password:string, role:string, onSuccess:()=>void) => Promise<void>
 }
 
 
 const useAuthStore = create<AuthState> ((set) => ({
     isAuthenticated:false,
     user:null,
-    login:async (UserName:string,Password:string,onSuccess:()=>void) => {
+    login:async (UserName:string,Password:string,onSuccess:(role:string)=>void) => {
         try{
             console.log("sending post req")
             const response = await axios.post("http://localhost:8000/sign-in", {UserName,Password});
             // console.log(response)
             if(response.status === 200){
-                set({isAuthenticated:true, user:{username:response.data.user.UserName, email:response.data.user.Email,role:response.data.user.Role}});
-                set({token:response.data.token})
+                set(prevState => ({
+                    isAuthenticated: true,
+                    user: {
+                      username: response.data.user.UserName,
+                      email: response.data.user.Email,
+                      role: response.data.user.Role
+                    },
+                    token: response.data.token
+                  }));
                 console.log("user: ",response.data.user.UserName,response.data.user.Email,response.data.user.Role)
                 console.log("token:",response.data.token);
+                await AsyncStorage.setItem("authToken", response.data.token);
+
+                onSuccess(response.data.user.Role);
+
             }
             else{     
                 console.log("Invalid Username or Password ");
                 return;
             }
 
-            await AsyncStorage.setItem("authToken", response.data.token);
-            onSuccess();
+            
             
         
         } catch(error){
@@ -53,7 +60,8 @@ const useAuthStore = create<AuthState> ((set) => ({
 
     logout:async () => {
         set({isAuthenticated:false, user:null});
-        await AsyncStorage.removeItem("authToken")
+        await AsyncStorage.removeItem("authToken");
+        set({token:null});
     },
 
     signup:async (UserName:string, Email:string,Password:string, Role:string,onSuccess:() => void) => {

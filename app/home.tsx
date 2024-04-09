@@ -8,35 +8,30 @@ import {
   FlatList,
   Pressable,
 } from "react-native";
-import React, { useEffect, useLayoutEffect } from "react";
+import React, { useEffect} from "react";
 import {
   AdjustmentsHorizontalIcon,
-  ChevronDownIcon,
-  UserIcon,
   MagnifyingGlassIcon,
 } from "react-native-heroicons/outline";
 import { categories } from "@/assets/data/home3";
-import Category from "@/components/Category";
 import { Ionicons } from "@expo/vector-icons";
-import { shops } from "@/lib/shops";
 import ShopCard from "@/components/ShopCard";
 import * as Location from "expo-location";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import useAuthStore from "@/stores/authStore";
 import { useRouter } from "expo-router";
-import profile from "./profile";
-import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
+import useBasketStore from "@/stores/basketStore";
+import useShopStore from "@/stores/shopStore";
 
-
-interface Shop{
-  __id:string
+interface Shop {
+  __id: string;
   shopName: string;
-  ownerName:string
+  ownerName: string;
   address: string;
   location: {
-      type: string;
-      coordinates: number[];
+    type: string;
+    coordinates: number[];
   };
   image?: Buffer;
 }
@@ -48,8 +43,17 @@ const HomeScreen = () => {
   const [products, setProducts] = React.useState([]);
   const [shops, setShops] = React.useState([]);
   const router = useRouter();
-
+  const setDeliveryLocation = useBasketStore(
+    (state) => state.setDeliveryLocation
+  );
+  const logout = useAuthStore((state) => state.logout);
+  const { isAuthenticated } = useAuthStore();
+  const setShop = useShopStore((state) => state.setShop);
   useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace("/");
+    }
+
     console.log(token);
     const getToken = async () => {
       const token = await AsyncStorage.getItem("authToken");
@@ -73,12 +77,12 @@ const HomeScreen = () => {
       let location = await Location.getCurrentPositionAsync({});
       setLocation(location);
       console.log(location);
-    })();
 
-    
+      setDeliveryLocation(location.coords.latitude, location.coords.longitude);
+    })();
   }, []);
 
-  useEffect(()=> {
+  useEffect(() => {
     const getShops = async () => {
       console.log("SEnding post req");
 
@@ -98,18 +102,18 @@ const HomeScreen = () => {
         );
         console.log(response.data.nearbyShops);
 
-        setShops(response.data.nearbyShops)
-        console.log(response.data.nearbyShops[0].itemList)
+        setShops(response.data.nearbyShops);
+        console.log(response.data.nearbyShops[0].itemList);
       } catch (err) {
         console.log("err:", err);
       }
     };
 
     getShops();
-  },[location])
+  }, [location]);
 
   const handleLogout = async () => {
-    await AsyncStorage.removeItem("authToken");
+    await logout();
     router.replace("/");
   };
 
@@ -136,16 +140,28 @@ const HomeScreen = () => {
     }
   };
 
+  const handleProductTap = (_id: string) => {
+    const temp = shops.find((shop) => {
+      return shop.itemList.find((item) => item._id === _id);
+    });
+    setShop(temp.shop);
+    router.push("/shop");
+    // console.log("shop detials: ",temp)
+  };
+
   const renderItem = ({ item }) => (
-    <View className="flex-row items-center space-x-2">
+    <Pressable
+      className="flex-row items-center space-x-2"
+      onPress={() => handleProductTap(item._id)}
+    >
       <Image source={{ uri: item.imageUrl }} width={35} height={35} />
       <View>
         <Text className="font-bold text-lg">{item.itemName}</Text>
-        <Text>{item.description}</Text>
+        <Text className="text-xs">{item.description}</Text>
       </View>
-    </View>
+    </Pressable>
   );
-  useEffect(() => {}, [location]);
+
 
   return (
     <SafeAreaView className="bg-white pt-5">
@@ -185,11 +201,11 @@ const HomeScreen = () => {
           <FlatList
             data={products}
             renderItem={renderItem}
-            keyExtractor={(item,index) => index+'a'} // Adjust this according to your product data structure
+            keyExtractor={(item, index) => index + "a"} // Adjust this according to your product data structure
           />
         </View>
       )}
-      
+
       <ScrollView horizontal={true} className="">
         {categories.map((category) => {
           return (
@@ -197,11 +213,10 @@ const HomeScreen = () => {
               className="flex items-center space-x-3 p-1 justify-center"
               key={category.text}
             >
-              <Image
-                source={category.img}
-                style={{ height: 30, width: 30 }}
-              />
-              <Text className=" mt-2 text-xs tracking-widest ">{category.text}</Text>
+              <Image source={category.img} style={{ height: 30, width: 30 }} />
+              <Text className=" mt-2 text-xs tracking-widest ">
+                {category.text}
+              </Text>
             </View>
           );
         })}
@@ -225,10 +240,10 @@ const HomeScreen = () => {
         renderItem={({ item }) => {
           return (
             <ShopCard
-            key={item.shop.owner}
+              key={item.shop.owner}
               name={item.shop.shopName}
               src={item.shop.image}
-              address = {item.shop.address}
+              address={item.shop.address}
               categories={item.topCategories}
               distance={item.distance}
               shop={item.shop}

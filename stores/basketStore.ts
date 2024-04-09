@@ -26,9 +26,28 @@ export interface BasketState {
   clearCart: () => void;
   num: number;
   total: number;
+  location:{
+    latitude: number,
+    longitude:number
+}
+  setDeliveryLocation:(latitude: number,longitude:number)=> void;
+  setCardId:(id: string)=> void;
 }
 
 const useBasketStore = create<BasketState>()((set) => ({
+  location:{
+    latitude:null,
+    longitude:null
+  },
+  setDeliveryLocation: (latitude, longitude) => {
+    set((state) => ({
+      location: {
+        ...state.location,
+        latitude: latitude,
+        longitude: longitude
+      }
+    }));
+  },
   cartId:null,
   products: [],
   num: 0,
@@ -64,6 +83,7 @@ const useBasketStore = create<BasketState>()((set) => ({
     });
   },
   clearCart: () => set({ products: [], num: 0, total: 0 }),
+  setCardId:(id)=> set({cartId:id})
 }));
 
 export default useBasketStore;

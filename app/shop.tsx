@@ -11,7 +11,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-na
 import useBasketStore from '@/stores/basketStore';
 
 interface Shop {
-    __id:string
+    _id:string
     shopName: string;
     ownerName:string
     address: string;
@@ -41,6 +41,11 @@ const Shop = () => {
  const scrollRef = useRef<ScrollView>(null);
  const itemsRef = useRef<TouchableOpacity[]>([]);
 
+ const setCartId = useBasketStore((state)=> state.setCardId);
+useEffect(()=> {
+    console.log(shop)
+    setCartId(shop._id);
+},[])
  const food = [
   {
     category: 'Meal Deals',
@@ -228,9 +233,10 @@ const Shop = () => {
 const groupedProducts = groupProductsByCategory(items);
 
 // Convert to desired format
-const result = Object.keys(groupedProducts).map(category => ({
+const result = Object.keys(groupedProducts).map((category,index) => ({
     title: category,
-    data: groupedProducts[category]
+    data: groupedProducts[category],
+    index:index
 }));
 
 const DATA = result
@@ -258,7 +264,7 @@ const DATA = result
         <Text style={styles.dishText}>{item.description}</Text>
         {/* <Text  className='font-bold mt-1 text-lg'>${item.variants[0].price}</Text> */}
       </View>
-      <Image source={{uri:"https://imgs.search.brave.com/mf55zz_cIg4ea6vobp15uD6S0vcWGQw0oTM83LghSMk/rs:fit:860:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5pc3RvY2twaG90/by5jb20vaWQvMTM2/NTA5OTg2OS9waG90/by9zaXgtYXBwbGVz/LmpwZz9zPTYxMng2/MTImdz0wJms9MjAm/Yz1LeDlqTnZFRVQ1/RVJyN29ITkZNeHJv/VGM1NEsxTmdrN1Ix/Qlc5SUNYMlBVPQ"}} style={styles.dishImage} />
+      <Image source={{uri:item.imageUrl}} style={styles.dishImage} />
     </TouchableOpacity>
   </Link>
  )
@@ -304,6 +310,7 @@ const selectCategory = (index: number) => {
   });
 };
 
+console.log(shop.image)
 const {num,total} = useBasketStore()
   return (
     <>
@@ -320,12 +327,12 @@ const {num,total} = useBasketStore()
             <Text style={styles.stickySectionText}>{shop.shopName}</Text>
           </View>
         )}>
-      <View style={styles.detailsContainer}>
-          <Text style={styles.restaurantName}>{shop.shopName}</Text>
-          <Text className='ml-4 text-gray-600' >Thoda shop description here!</Text>
+      <View style={styles.detailsContainer} className=''>
+          <Text style={styles.restaurantName} className='uppercase font-bold tracking-widest'>{shop.shopName}</Text>
+          <Text className='ml-4 text-gray-600 border-b-2 black' >{shop.address}</Text>
           <SectionList
             contentContainerStyle={{ paddingBottom: 150 }}
-            keyExtractor={(item, index) => `${item.index + index}`}
+            keyExtractor={(item, index) => `${Math.random().toString(36).substring(7)}`}
             scrollEnabled={false}
             sections={DATA}
             renderItem={renderItem}
@@ -342,7 +349,7 @@ const {num,total} = useBasketStore()
             {DATA.map((item, index) => (
               <TouchableOpacity
                 ref={(ref) => (itemsRef.current[index] = ref!)}
-                key={index}
+                key={`${Math.random().toString(36).substring(7)}`}
                 style={activeIndex === index ? styles.segmentButtonActive : styles.segmentButton}
                 onPress={() => selectCategory(index)}>
                 <Text style={activeIndex === index ? styles.segmentTextActive : styles.segmentText}>{item.title}</Text>
@@ -359,7 +366,7 @@ const {num,total} = useBasketStore()
               <TouchableOpacity style={styles.fullButton}>
                 <Text style={styles.basket}>{num}</Text>
                 <Text style={styles.footerText}>View Basket</Text>
-                <Text style={styles.basketTotal}>${total}</Text>
+                <Text style={styles.basketTotal}>₹{total}</Text>
               </TouchableOpacity>
             </Link>
           </SafeAreaView>
